@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CB East - Call Agent Console</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1877F2;
+            --primary-blue-hover: #0f5ed7;
+            --bg-color: #f0f2f5;
+            --text-primary: #1c1e21;
+            --text-muted: #65676b;
+            --card-bg: #ffffff;
+            --border-color: #dadde1;
+            --success-color: #42b883;
+            --warning-color: #ff9500;
+            --error-color: #e74c3c;
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+            --shadow-light: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #18191a;
+            --text-primary: #e4e6ea;
+            --text-muted: #b0b3b8;
+            --card-bg: #242526;
+            --border-color: #3a3b3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* Top Bar */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--primary-blue);
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .topbar-logo {
+            display: flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 20px;
+            margin-right: 20px;
+        }
+
+        .topbar-logo svg {
+            width: 32px;
+            height: 32px;
+            margin-right: 8px;
+            fill: white;
+        }
+
+        .topbar-search {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .topbar-search input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px 8px 40px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .topbar-search input::placeholder {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .topbar-search svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            fill: rgba(255, 255, 255, 0.8);
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: 20px;
+        }
+
+        .topbar-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .topbar-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .topbar-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--success-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Layout */
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 56px);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 16px 0;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 16px;
+            max-width: calc(100vw - 560px);
+        }
+
+        .right-sidebar {
+            width: 280px;
+            background: var(--card-bg);
+            border-left: 1px solid var(--border-color);
+            padding: 16px;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .right-sidebar.collapsed {
+            transform: translateX(100%);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 0 16px 8px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            margin: 2px 8px;
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            fill: currentColor;
+        }
+
+        .filter-chip {
+            display: inline-block;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 4px 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-chip.active {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow-light);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: var(--primary-blue-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-color);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        /* Script Card */
+        .script-section {
+            border-left: 4px solid var(--primary-blue);
+            padding-left: 16px;
+            margin-bottom: 20px;
+        }
+
+        .script-section h3 {
+            color: var(--primary-blue);
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .script-section p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--bg-color);
+        }
+
+        .copy-btn.copied {
+            color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        /* Objection Table */
+        .objection-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .objection-table th,
+        .objection-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .objection-table th {
+            background: var(--bg-color);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .objection-table td {
+            color: var(--text-muted);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slider {
+            flex: 1;
+        }
+
+        .slider-value {
+            background: var(--primary-blue);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        /* Tags */
+        .tag-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            min-height: 40px;
+        }
+
+        .tag {
+            background: var(--primary-blue);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tag-remove {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        /* Activity Feed */
+        .activity-feed {
+            margin-top: 20px;
+        }
+
+        .feed-composer {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .feed-composer textarea {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 14px;
+            resize: none;
+            min-height: 60px;
+            padding: 8px 0;
+        }
+
+        .feed-composer textarea:focus {
+            outline: none;
+        }
+
+        .feed-item {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .feed-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .feed-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 500;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+
+        .feed-meta {
+            flex: 1;
+        }
+
+        .feed-name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .feed-time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .feed-content {
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .feed-actions {
+            display: flex;
+            gap: 16px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .feed-action {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .feed-action:hover {
+            background: var(--bg-color);
+        }
+
+        /* Floating Dialer */
+        .dialer-fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: var(--success-color);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+            z-index: 999;
+        }
+
+        .dialer-fab:hover {
+            transform: scale(1.1);
+        }
+
+        .dialer-fab svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .dialer-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+        }
+
+        .dialer-modal.hidden {
+            display: none;
+        }
+
+        .dialer-content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            width: 300px;
+            box-shadow: var(--shadow);
+        }
+
+        .dialer-number {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            padding: 8px;
+            background: var(--bg-color);
+            border-radius: 8px;
+        }
+
+        .dialer-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .dialer-key {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dialer-key:hover {
+            background: var(--border-color);
+        }
+
+        .dialer-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .call-status {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-pill.idle {
+            background: var(--border-color);
+            color: var(--text-muted);
+        }
+
+        .status-pill.ringing {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .status-pill.live {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .status-pill.ended {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .call-timer {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Lead Queue */
+        .lead-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lead-item:hover {
+            background: var(--bg-color);
+        }
+
+        .lead-info {
+            flex: 1;
+        }
+
+        .lead-name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .lead-details {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .lead-score {
+            background: var(--primary-blue);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            box-shadow: var(--shadow);
+            z-index: 1002;
+            transform: translateX(300px);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        /* Toggle Switch */
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background-color: var(--primary-blue);
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Responsive */
+        @media (max-width: 1280px) {
+            .layout {
+                position: relative;
+            }
+            .main-content {
+                max-width: none;
+            }
+            .right-sidebar {
+                position: absolute;
+                top: 0;
+                right: 0;
+                height: 100%;
+                z-index: 100;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .right-sidebar {
+                position: fixed;
+                top: 56px;
+                right: 0;
+                height: calc(100vh - 56px);
+                transform: translateX(100%);
+            }
+            .right-sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 56px;
+                left: 0;
+                height: calc(100vh - 56px);
+                z-index: 100;
+                transform: translateX(-100%);
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                padding: 12px;
+            }
+            .topbar-search {
+                display: none;
+            }
+            .card {
+                padding: 16px;
+            }
+        }
+
+        /* Dark mode adjustments */
+        [data-theme="dark"] .topbar {
+            background: #242526;
+        }
+
+        [data-theme="dark"] .btn {
+            background: var(--primary-blue);
+        }
+
+        [data-theme="dark"] .form-input,
+        [data-theme="dark"] .form-textarea {
+            background: var(--bg-color);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="topbar">
+        <a href="#" class="topbar-logo">
+            <svg viewBox="0 0 24 24">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 2.5l5 3.5-5 3.5v-7zm-4 0v7L6 10l5-3.5z"/>
+            </svg>
+            CB East
+        </a>
+        
+        <div class="topbar-search">
+            <svg viewBox="0 0 24 24">
+                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+            <input type="text" placeholder="Search CB East..." id="globalSearch">
+        </div>
+        
+        <div class="topbar-actions">
+            <button class="topbar-btn" id="notificationBtn">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                </svg>
+            </button>
+            <button class="topbar-btn" id="chatBtn">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4v3c0 .6.4 1 1 1 .2 0 .5-.1.7-.3L12.4 18H20c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                </svg>
+            </button>
+            <button class="topbar-btn" id="helpBtn">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                </svg>
+            </button>
+            <button class="topbar-btn" id="darkModeToggle">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6z"/>
+                </svg>
+            </button>
+            <div class="user-avatar">JD</div>
+        </div>
+    </div>
+
+    <div class="layout">
+        <!-- Left Sidebar -->
+        <aside class="sidebar" id="leftSidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Navigation</div>
+                <a href="#" class="nav-item active" data-section="dashboard">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item" data-section="queue">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                    </svg>
+                    Call Queue
+                </a>
+                <a href="#" class="nav-item" data-section="leads">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                    Leads
+                </a>
+                <a href="#" class="nav-item" data-section="companies">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10z"/>
+                    </svg>
+                    Companies
+                </a>
+                <a href="#" class="nav-item" data-section="scripts">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                    </svg>
+                    Scripts
+                </a>
+                <a href="#" class="nav-item" data-section="objections">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    Objections
+                </a>
+                <a href="#" class="nav-item" data-section="reports">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                    Reports
+                </a>
+                <a href="#" class="nav-item" data-section="settings">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.82,11.69,4.82,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                    </svg>
+                    Settings
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Quick Filters</div>
+                <div style="padding: 0 16px;">
+                    <div class="filter-chip active" data-filter="today">Today</div>
+                    <div class="filter-chip" data-filter="week">This Week</div>
+                    <div class="filter-chip" data-filter="high-intent">High Intent</div>
+                    <div class="filter-chip" data-filter="followups">Follow-ups</div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Call Queue</div>
+                <div id="leadQueue" style="padding: 0 8px;">
+                    <!-- Lead queue items will be populated by JS -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Call Script - CB East / CBG</h2>
+                    <button class="btn btn-secondary btn-small" id="toggleTLDR">Show TL;DR</button>
+                </div>
+
+                <div class="script-section">
+                    <h3>Introduction – Gain Attention (30s)</h3>
+                    <p>"Hi [Name], this is [Your Name] from CB East. I help Canadian businesses expand internationally through government export programs. I noticed your company [Company] has strong potential for overseas markets. Do you have 2 minutes for me to share how we've helped similar businesses like yours increase revenue by 40-60% through strategic international expansion?"</p>
+                    <button class="copy-btn" data-copy="intro">Copy</button>
+                </div>
+
+                <div class="script-section">
+                    <h3>Reveal Value – Build Curiosity (60s)</h3>
+                    <p>"We work with Canadian SMEs who want to export but don't know where to start. Most businesses lose money on international expansion because they choose the wrong markets or lack proper support. We solve this through our CBG Services - we provide market intelligence, warm introductions to qualified buyers, and in-country concierge support. For example, we recently helped a Toronto manufacturer enter the UAE market and they secured $2.3M in orders within 6 months. The best part? Our initial consultation and market assessment are completely free through government funding."</p>
+                    <button class="copy-btn" data-copy="value">Copy</button>
+                </div>
+
+                <div class="script-section">
+                    <h3>Invite Engagement – Ask for the Call (30-45s)</h3>
+                    <p>"I'd love to show you our 3-tier service model and discuss which markets make sense for [Company]. We have openings this week for a 15-minute strategy call where I can share a customized market opportunity report for your industry. Would Tuesday at 2 PM or Wednesday at 10 AM work better for you?"</p>
+                    <button class="copy-btn" data-copy="engagement">Copy</button>
+                </div>
+
+                <div class="script-section">
+                    <h3>Take Next Step (30s)</h3>
+                    <p>"Perfect! I'll send you a calendar link and a brief pre-call questionnaire so I can prepare specific insights for [Company]. You'll also receive our 'International Expansion Readiness Checklist' as a thank you. I'm excited to explore how we can help [Company] grow internationally. Talk to you [Day] at [Time]!"</p>
+                    <button class="copy-btn" data-copy="nextstep">Copy</button>
+                </div>
+
+                <div class="script-section" style="background: var(--bg-color); padding: 12px; border-radius: 8px; border-left: 4px solid var(--warning-color);">
+                    <h3 style="color: var(--warning-color);">Optional Follow-up Question</h3>
+                    <p>"Before we wrap up - what's been your biggest challenge when you've considered international expansion in the past? Understanding this will help me prepare better insights for our call."</p>
+                    <button class="copy-btn" data-copy="followup">Copy</button>
+                </div>
+
+                <div style="margin-top: 24px;">
+                    <h3 style="margin-bottom: 12px;">Quick Objection Handling</h3>
+                    <table class="objection-table">
+                        <thead>
+                            <tr>
+                                <th>Objection</th>
+                                <th>Response</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>"We're not ready for international"</td>
+                                <td>"That's exactly why our free assessment is valuable - we help you determine readiness and create a timeline that works for your business."</td>
+                                <td><button class="btn btn-small" onclick="insertToNotes(this.parentElement.parentElement)">Insert to Notes</button></td>
+                            </tr>
+                            <tr>
+                                <td>"We don't have budget"</td>
+                                <td>"Our initial services are funded by the government - there's no cost to explore opportunities. Plus, we'll show you funding options available for qualified exporters."</td>
+                                <td><button class="btn btn-small" onclick="insertToNotes(this.parentElement.parentElement)">Insert to Notes</button></td>
+                            </tr>
+                            <tr>
+                                <td>"We tried before and failed"</td>
+                                <td>"That's common - 70% of first attempts fail due to poor market selection. We use data-driven market analysis to avoid those mistakes and build on what you learned."</td>
+                                <td><button class="btn btn-small" onclick="insertToNotes(this.parentElement.parentElement)">Insert to Notes</button></td>
+                            </tr>
+                            <tr>
+                                <td>"Send me information first"</td>
+                                <td>"I can send a one-pager, but the real value is in the customized market opportunity report I prepare for each business. It takes 15 minutes and you'll have actionable insights immediately."</td>
+                                <td><button class="btn btn-small" onclick="insertToNotes(this.parentElement.parentElement)">Insert to Notes</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CBG Services Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">CBG Services Overview</h2>
+                    <button class="btn btn-secondary btn-small" onclick="toggleCollapse('cbgServices')">Toggle</button>
+                </div>
+                <div id="cbgServices">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                        <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+                            <h4 style="color: var(--primary-blue); margin-bottom: 8px;">Free Services</h4>
+                            <ul style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">
+                                <li>Email Updates & Market Intelligence</li>
+                                <li>Export Readiness Assessment</li>
+                                <li>Basic Market Research</li>
+                                <li>Government Program Guidance</li>
+                            </ul>
+                        </div>
+                        <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+                            <h4 style="color: var(--primary-blue); margin-bottom: 8px;">Accelerator Program</h4>
+                            <ul style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">
+                                <li>Comprehensive Playbooks</li>
+                                <li>Warm Introductions to Buyers</li>
+                                <li>Market Entry Strategy</li>
+                                <li>Trade Mission Support</li>
+                                <li>Cultural Training</li>
+                            </ul>
+                        </div>
+                        <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+                            <h4 style="color: var(--primary-blue); margin-bottom: 8px;">Insider Program</h4>
+                            <ul style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">
+                                <li>In-Country Concierge Service</li>
+                                <li>Negotiation Support</li>
+                                <li>Legal & Regulatory Guidance</li>
+                                <li>Payment & Logistics Solutions</li>
+                                <li>Ongoing Account Management</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Feed -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Activity & Notes</h2>
+                </div>
+                
+                <div class="feed-composer">
+                    <textarea id="noteInput" placeholder="Add a note about this call or lead..."></textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                        <div>
+                            <div class="filter-chip" onclick="addTag('Call')">Call</div>
+                            <div class="filter-chip" onclick="addTag('Email')">Email</div>
+                            <div class="filter-chip" onclick="addTag('Follow-up')">Follow-up</div>
+                            <div class="filter-chip" onclick="addTag('Hot Lead')">Hot Lead</div>
+                        </div>
+                        <button class="btn" onclick="addNote()">Post Note</button>
+                    </div>
+                    <div id="selectedTags" style="margin-top: 8px;"></div>
+                </div>
+
+                <div id="activityFeed">
+                    <!-- Feed items will be populated by JS -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="right-sidebar" id="rightSidebar">
+            <div class="card" style="margin-bottom: 0; box-shadow: none;">
+                <div class="card-header">
+                    <h2 class="card-title">Call Tracker</h2>
+                    <button class="btn btn-secondary btn-small" onclick="toggleSidebar('right')">
+                        <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="crmForm">
+                    <div class="form-group">
+                        <label class="form-label">Company Name</label>
+                        <input type="text" class="form-input" id="companyName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Contact Person</label>
+                        <input type="text" class="form-input" id="contactPerson" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" class="form-input" id="phone">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Industry</label>
+                        <input type="text" class="form-input" id="industry">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Current Export Markets</label>
+                        <div class="tag-input" id="exportMarkets">
+                            <input type="text" placeholder="Type and press Enter..." id="marketInput" style="border: none; outline: none; background: transparent; flex: 1; min-width: 100px;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Interest Level</label>
+                        <div class="slider-container">
+                            <input type="range" class="slider form-input" id="interestLevel" min="1" max="10" value="5">
+                            <div class="slider-value" id="interestValue">5</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Follow-up Date</label>
+                        <input type="datetime-local" class="form-input" id="followupDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-input form-textarea" id="crmNotes" placeholder="Additional notes about this contact..."></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                        <button type="submit" class="btn" style="flex: 1;">Save Record</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear</button>
+                    </div>
+
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn btn-secondary btn-small" onclick="exportCSV()">Export CSV</button>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="emailOnePager()">Email One-Pager</button>
+                    </div>
+                </form>
+
+                <div style="margin-top: 24px;">
+                    <h3 style="margin-bottom: 12px; font-size: 16px;">Saved Records</h3>
+                    <div style="margin-bottom: 12px;">
+                        <input type="text" class="form-input" placeholder="Search records..." id="recordSearch" style="margin-bottom: 8px;">
+                        <select class="form-input" id="recordSort" style="font-size: 12px;">
+                            <option value="date">Sort by Date</option>
+                            <option value="interest">Sort by Interest</option>
+                            <option value="company">Sort by Company</option>
+                        </select>
+                    </div>
+                    <div id="recordsList">
+                        <!-- Records will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Floating Dialer -->
+    <button class="dialer-fab" id="dialerFab">
+        <svg viewBox="0 0 24 24">
+            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+        </svg>
+    </button>
+
+    <!-- Dialer Modal -->
+    <div class="dialer-modal hidden" id="dialerModal">
+        <div class="dialer-content">
+            <div class="call-status">
+                <div class="status-pill idle" id="callStatus">Idle</div>
+                <div class="call-timer" id="callTimer">00:00</div>
+            </div>
+            
+            <div class="dialer-number" id="dialerNumber">Enter Number</div>
+            
+            <div class="dialer-keypad">
+                <button class="dialer-key" onclick="dialNumber('1')">1</button>
+                <button class="dialer-key" onclick="dialNumber('2')">2</button>
+                <button class="dialer-key" onclick="dialNumber('3')">3</button>
+                <button class="dialer-key" onclick="dialNumber('4')">4</button>
+                <button class="dialer-key" onclick="dialNumber('5')">5</button>
+                <button class="dialer-key" onclick="dialNumber('6')">6</button>
+                <button class="dialer-key" onclick="dialNumber('7')">7</button>
+                <button class="dialer-key" onclick="dialNumber('8')">8</button>
+                <button class="dialer-key" onclick="dialNumber('9')">9</button>
+                <button class="dialer-key" onclick="dialNumber('*')">*</button>
+                <button class="dialer-key" onclick="dialNumber('0')">0</button>
+                <button class="dialer-key" onclick="dialNumber('#')">#</button>
+            </div>
+            
+            <div class="dialer-controls">
+                <button class="btn" id="callBtn" onclick="makeCall()">Call</button>
+                <button class="btn btn-secondary" id="muteBtn" onclick="toggleMute()" disabled>Mute</button>
+                <button class="btn btn-secondary" id="holdBtn" onclick="toggleHold()" disabled>Hold</button>
+                <button class="btn" style="background: var(--error-color);" id="endBtn" onclick="endCall()" disabled>End</button>
+            </div>
+            
+            <div style="text-align: center; margin-top: 16px;">
+                <button class="btn btn-secondary btn-small" onclick="closeDialer()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div id="toastMessage"></div>
+    </div>
+
+    <!-- Objection Quick Picker Modal -->
+    <div class="dialer-modal hidden" id="objectionModal">
+        <div class="dialer-content" style="width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3>Quick Objection Picker</h3>
+                <button class="btn btn-secondary btn-small" onclick="closeObjectionModal()">Close</button>
+            </div>
+            <input type="text" class="form-input" placeholder="Search objections..." id="objectionSearch" style="margin-bottom: 12px;">
+            <div id="objectionList" style="max-height: 300px; overflow-y: auto;">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global State
+        let currentCall = {
+            status: 'idle',
+            number: '',
+            startTime: null,
+            timer: null,
+            muted: false,
+            onHold: false
+        };
+
+        let selectedTags = [];
+        let feedItems = [];
+        let crmRecords = [];
+        let currentFilter = 'today';
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeData();
+            setupEventListeners();
+            loadCRMRecords();
+            renderLeadQueue();
+            renderActivityFeed();
+            renderRecordsList();
+        });
+
+        // Sample Data
+        function initializeData() {
+            const sampleLeads = [
+                {
+                    id: 1,
+                    name: "TechFlow Inc",
+                    contact: "Sarah Chen",
+                    industry: "Software",
+                    region: "UAE/Dubai", 
+                    interest: 8,
+                    status: "new",
+                    phone: "+1-416-555-0123"
+                },
+                {
+                    id: 2,
+                    name: "Maple Manufacturing",
+                    contact: "David Kim",
+                    industry: "Manufacturing",
+                    region: "Saudi Arabia",
+                    interest: 7,
+                    status: "attempted",
+                    phone: "+1-604-555-0456"
+                },
+                {
+                    id: 3,
+                    name: "GreenTech Solutions",
+                    contact: "Maria Rodriguez",
+                    industry: "Clean Energy",
+                    region: "Indonesia",
+                    interest: 9,
+                    status: "connected",
+                    phone: "+1-514-555-0789"
+                },
+                {
+                    id: 4,
+                    name: "Northern Logistics",
+                    contact: "James Wilson",
+                    industry: "Logistics",
+                    region: "Malaysia",
+                    interest: 6,
+                    status: "new",
+                    phone: "+1-403-555-0321"
+                },
+                {
+                    id: 5,
+                    name: "Artisan Foods Co",
+                    contact: "Lisa Thompson",
+                    industry: "Food & Beverage",
+                    region: "Qatar",
+                    interest: 8,
+                    status: "attempted",
+                    phone: "+1-647-555-0654"
+                },
+                {
+                    id: 6,
+                    name: "Digital Dynamics",
+                    contact: "Alex Petrov",
+                    industry: "Technology",
+                    region: "Kazakhstan",
+                    interest: 7,
+                    status: "new",
+                    phone: "+1-778-555-0987"
+                }
+            ];
+
+            localStorage.setItem('leads', JSON.stringify(sampleLeads));
+
+            // Sample activity items
+            feedItems = [
+                {
+                    id: 1,
+                    author: "John Doe",
+                    content: "Called TechFlow Inc - very interested in UAE market entry. Scheduling follow-up call for next Tuesday.",
+                    tags: ["Call", "Hot Lead"],
+                    timestamp: new Date(Date.now() - 3600000),
+                    reactions: []
+                },
+                {
+                    id: 2,
+                    author: "John Doe", 
+                    content: "Sent market research report to Maple Manufacturing. Contact mentioned budget approval needed.",
+                    tags: ["Email", "Follow-up"],
+                    timestamp: new Date(Date.now() - 7200000),
+                    reactions: []
+                }
+            ];
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            // Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Filter chips
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', function() {
+                    document.querySelectorAll('[data-filter]').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                });
+            });
+
+            // Interest slider
+            const slider = document.getElementById('interestLevel');
+            const value = document.getElementById('interestValue');
+            slider.addEventListener('input', function() {
+                value.textContent = this.value;
+            });
+
+            // Export markets input
+            const marketInput = document.getElementById('marketInput');
+            marketInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addMarketTag(this.value.trim());
+                    this.value = '';
+                }
+            });
+
+            // CRM Form
+            document.getElementById('crmForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveCRMRecord();
+            });
+
+            // Global search
+            document.getElementById('globalSearch').addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                filterContent(query);
+            });
+
+            // Dark mode toggle
+            document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '/' && !e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    document.getElementById('globalSearch').focus();
+                } else if (e.key === 'n' && e.ctrlKey && !e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    document.getElementById('noteInput').focus();
+                } else if (e.key === 's' && e.ctrlKey && !e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    saveCRMRecord();
+                } else if (e.key === '?' && !e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    openObjectionModal();
+                }
+            });
+
+            // Mobile menu toggles
+            window.addEventListener('resize', handleResize);
+            handleResize();
+        }
+
+        // Functions
+
+        /* Topbar */
+        function toggleDarkMode() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        function filterContent(query) {
+            // Filter leads in queue
+            const leads = JSON.parse(localStorage.getItem('leads') || '[]');
+            const filteredLeads = leads.filter(lead => 
+                lead.name.toLowerCase().includes(query) ||
+                lead.contact.toLowerCase().includes(query) ||
+                lead.industry.toLowerCase().includes(query)
+            );
+            renderLeadQueue(filteredLeads);
+
+            // Filter activity feed
+            const filteredFeed = feedItems.filter(item =>
+                item.content.toLowerCase().includes(query) ||
+                item.tags.some(tag => tag.toLowerCase().includes(query))
+            );
+            renderActivityFeed(filteredFeed);
+        }
+
+        /* Sidebar */
+        function toggleSidebar(side) {
+            const sidebar = side === 'left' ? document.getElementById('leftSidebar') : document.getElementById('rightSidebar');
+            sidebar.classList.toggle('show');
+        }
+
+        function handleResize() {
+            const width = window.innerWidth;
+            const leftSidebar = document.getElementById('leftSidebar');
+            const rightSidebar = document.getElementById('rightSidebar');
+
+            if (width <= 768) {
+                leftSidebar.classList.remove('show');
+            }
+            if (width <= 1024) {
+                rightSidebar.classList.remove('show');
+            }
+        }
+
+        /* Call Script */
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 1200);
+                showToast('Copied to clipboard!', 'success');
+            });
+        }
+
+        // Setup copy buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const scriptContent = {
+                intro: "Hi [Name], this is [Your Name] from CB East. I help Canadian businesses expand internationally through government export programs. I noticed your company [Company] has strong potential for overseas markets. Do you have 2 minutes for me to share how we've helped similar businesses like yours increase revenue by 40-60% through strategic international expansion?",
+                value: "We work with Canadian SMEs who want to export but don't know where to start. Most businesses lose money on international expansion because they choose the wrong markets or lack proper support. We solve this through our CBG Services - we provide market intelligence, warm introductions to qualified buyers, and in-country concierge support. For example, we recently helped a Toronto manufacturer enter the UAE market and they secured $2.3M in orders within 6 months. The best part? Our initial consultation and market assessment are completely free through government funding.",
+                engagement: "I'd love to show you our 3-tier service model and discuss which markets make sense for [Company]. We have openings this week for a 15-minute strategy call where I can share a customized market opportunity report for your industry. Would Tuesday at 2 PM or Wednesday at 10 AM work better for you?",
+                nextstep: "Perfect! I'll send you a calendar link and a brief pre-call questionnaire so I can prepare specific insights for [Company]. You'll also receive our 'International Expansion Readiness Checklist' as a thank you. I'm excited to explore how we can help [Company] grow internationally. Talk to you [Day] at [Time]!",
+                followup: "Before we wrap up - what's been your biggest challenge when you've considered international expansion in the past? Understanding this will help me prepare better insights for our call."
+            };
+
+            document.querySelectorAll('[data-copy]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const section = this.dataset.copy;
+                    copyToClipboard(scriptContent[section], this);
+                });
+            });
+        });
+
+        function toggleTLDR() {
+            const btn = document.getElementById('toggleTLDR');
+            const isShowing = btn.textContent === 'Hide TL;DR';
+            
+            if (isShowing) {
+                btn.textContent = 'Show TL;DR';
+                // Hide TL;DR logic here
+            } else {
+                btn.textContent = 'Hide TL;DR';
+                showToast('TL;DR: Free consultation → Market assessment → Customized expansion plan → Government-funded support', 'success');
+            }
+        }
+
+        function insertToNotes(row) {
+            const objection = row.cells[0].textContent;
+            const response = row.cells[1].textContent;
+            const noteText = `Objection: "${objection}"\nResponse: "${response}"`;
+            
+            const noteInput = document.getElementById('noteInput');
+            noteInput.value += (noteInput.value ? '\n\n' : '') + noteText;
+            addTag('Objection Handled');
+            showToast('Objection response inserted into notes', 'success');
+        }
+
+        function toggleCollapse(id) {
+            const element = document.getElementById(id);
+            element.style.display = element.style.display === 'none' ? 'block' : 'none';
+        }
+
+        /* Activity Feed */
+        function addTag(tagName) {
+            if (!selectedTags.includes(tagName)) {
+                selectedTags.push(tagName);
+                renderSelectedTags();
+            }
+        }
+
+        function removeTag(tagName) {
+            selectedTags = selectedTags.filter(tag => tag !== tagName);
+            renderSelectedTags();
+        }
+
+        function renderSelectedTags() {
+            const container = document.getElementById('selectedTags');
+            container.innerHTML = selectedTags.map(tag => 
+                `<span class="tag">
+                    ${tag}
+                    <button class="tag-remove" onclick="removeTag('${tag}')">&times;</button>
+                </span>`
+            ).join('');
+        }
+
+        function addNote() {
+            const noteInput = document.getElementById('noteInput');
+            const content = noteInput.value.trim();
+            
+            if (!content) return;
+
+            const newNote = {
+                id: Date.now(),
+                author: "John Doe",
+                content: content,
+                tags: [...selectedTags],
+                timestamp: new Date(),
+                reactions: []
+            };
+
+            feedItems.unshift(newNote);
+            noteInput.value = '';
+            selectedTags = [];
+            renderSelectedTags();
+            renderActivityFeed();
+            showToast('Note added successfully', 'success');
+        }
+
+        function renderActivityFeed(items = feedItems) {
+            const feed = document.getElementById('activityFeed');
+            
+            if (items.length === 0) {
+                feed.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 40px;">No activity yet</div>';
+                return;
+            }
+
+            feed.innerHTML = items.map(item => `
+                <div class="feed-item" data-id="${item.id}">
+                    <div class="feed-header">
+                        <div class="feed-avatar">${item.author.split(' ').map(n => n[0]).join('')}</div>
+                        <div class="feed-meta">
+                            <div class="feed-name">${item.author}</div>
+                            <div class="feed-time">${formatTime(item.timestamp)}</div>
+                        </div>
+                        <div style="margin-left: auto;">
+                            <button class="feed-action" onclick="editNote(${item.id})">Edit</button>
+                            <button class="feed-action" onclick="deleteNote(${item.id})">Delete</button>
+                        </div>
+                    </div>
+                    <div class="feed-content">${item.content}</div>
+                    ${item.tags.length > 0 ? `<div style="margin-bottom: 8px;">${item.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>` : ''}
+                    <div class="feed-actions">
+                        <button class="feed-action" onclick="toggleReaction(${item.id}, 'like')">
+                            <span>👍</span> ${item.reactions.filter(r => r.type === 'like').length}
+                        </button>
+                        <button class="feed-action">
+                            <span>💬</span> Comment
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editNote(id) {
+            const item = feedItems.find(f => f.id === id);
+            if (!item) return;
+
+            const newContent = prompt('Edit note:', item.content);
+            if (newContent && newContent.trim()) {
+                item.content = newContent.trim();
+                renderActivityFeed();
+                showToast('Note updated', 'success');
+            }
+        }
+
+        function deleteNote(id) {
+            if (confirm('Delete this note?')) {
+                feedItems = feedItems.filter(f => f.id !== id);
+                renderActivityFeed();
+                showToast('Note deleted', 'success');
+            }
+        }
+
+        function toggleReaction(id, type) {
+            const item = feedItems.find(f => f.id === id);
+            if (!item) return;
+
+            const existing = item.reactions.findIndex(r => r.type === type && r.user === 'John Doe');
+            if (existing >= 0) {
+                item.reactions.splice(existing, 1);
+            } else {
+                item.reactions.push({ type, user: 'John Doe' });
+            }
+            renderActivityFeed();
+        }
+
+        function formatTime(date) {
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            return `${days}d ago`;
+        }
+
+        /* Soft Phone/Dialer */
+        function openDialer() {
+            document.getElementById('dialerModal').classList.remove('hidden');
+        }
+
+        function closeDialer() {
+            document.getElementById('dialerModal').classList.add('hidden');
+        }
+
+        function dialNumber(digit) {
+            const display = document.getElementById('dialerNumber');
+            const current = display.textContent === 'Enter Number' ? '' : display.textContent;
+            display.textContent = current + digit;
+            currentCall.number = current + digit;
+        }
+
+        function makeCall() {
+            if (!currentCall.number) {
+                showToast('Please enter a phone number', 'error');
+                return;
+            }
+
+            currentCall.status = 'ringing';
+            currentCall.startTime = Date.now();
+            updateCallStatus();
+            
+            // Simulate call progression
+            setTimeout(() => {
+                currentCall.status = 'live';
+                updateCallStatus();
+                startCallTimer();
+            }, 3000);
+        }
+
+        function endCall() {
+            currentCall.status = 'ended';
+            if (currentCall.timer) {
+                clearInterval(currentCall.timer);
+                currentCall.timer = null;
+            }
+            updateCallStatus();
+            
+            setTimeout(() => {
+                currentCall.status = 'idle';
+                currentCall.number = '';
+                currentCall.startTime = null;
+                currentCall.muted = false;
+                currentCall.onHold = false;
+                document.getElementById('dialerNumber').textContent = 'Enter Number';
+                updateCallStatus();
+            }, 2000);
+
+            // Add call activity
+            addCallActivity();
+        }
+
+        function toggleMute() {
+            currentCall.muted = !currentCall.muted;
+            const btn = document.getElementById('muteBtn');
+            btn.textContent = currentCall.muted ? 'Unmute' : 'Mute';
+            btn.style.background = currentCall.muted ? 'var(--warning-color)' : '';
+        }
+
+        function toggleHold() {
+            currentCall.onHold = !currentCall.onHold;
+            const btn = document.getElementById('holdBtn');
+            btn.textContent = currentCall.onHold ? 'Unhold' : 'Hold';
+            btn.style.background = currentCall.onHold ? 'var(--warning-color)' : '';
+        }
+
+        function updateCallStatus() {
+            const statusEl = document.getElementById('callStatus');
+            const callBtn = document.getElementById('callBtn');
+            const muteBtn = document.getElementById('muteBtn');
+            const holdBtn = document.getElementById('holdBtn');
+            const endBtn = document.getElementById('endBtn');
+
+            statusEl.className = `status-pill ${currentCall.status}`;
+            statusEl.textContent = currentCall.status.charAt(0).toUpperCase() + currentCall.status.slice(1);
+
+            const isActive = currentCall.status === 'live' || currentCall.status === 'ringing';
+            callBtn.disabled = isActive;
+            muteBtn.disabled = !isActive;
+            holdBtn.disabled = !isActive;
+            endBtn.disabled = !isActive;
+        }
+
+        function startCallTimer() {
+            currentCall.timer = setInterval(() => {
+                const elapsed = Date.now() - currentCall.startTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('callTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function addCallActivity() {
+            const duration = currentCall.startTime ? Math.floor((Date.now() - currentCall.startTime) / 1000) : 0;
+            const newActivity = {
+                id: Date.now(),
+                author: "John Doe",
+                content: `Call completed to ${currentCall.number} - Duration: ${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}`,
+                tags: ["Call"],
+                timestamp: new Date(),
+                reactions: []
+            };
+            feedItems.unshift(newActivity);
+            renderActivityFeed();
+        }
+
+        // Event listener for dialer FAB
+        document.getElementById('dialerFab').addEventListener('click', openDialer);
+
+        /* CRM Form */
+        function addMarketTag(market) {
+            if (!market) return;
+            
+            const container = document.getElementById('exportMarkets');
+            const input = document.getElementById('marketInput');
+            
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.innerHTML = `${market} <button class="tag-remove" onclick="this.parentElement.remove()">&times;</button>`;
+            
+            container.insertBefore(tag, input);
+        }
+
+        function saveCRMRecord() {
+            const form = document.getElementById('crmForm');
+            const formData = new FormData(form);
+            
+            const exportMarkets = Array.from(document.querySelectorAll('#exportMarkets .tag'))
+                .map(tag => tag.textContent.replace('×', '').trim());
+
+            const record = {
+                id: Date.now(),
+                companyName: document.getElementById('companyName').value,
+                contactPerson: document.getElementById('contactPerson').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                industry: document.getElementById('industry').value,
+                exportMarkets: exportMarkets,
+                interestLevel: document.getElementById('interestLevel').value,
+                followupDate: document.getElementById('followupDate').value,
+                notes: document.getElementById('crmNotes').value,
+                createdAt: new Date().toISOString()
+            };
+
+            crmRecords.unshift(record);
+            localStorage.setItem('crmRecords', JSON.stringify(crmRecords));
+            renderRecordsList();
+            clearForm();
+            showToast('Record saved successfully!', 'success');
+        }
+
+        function clearForm() {
+            document.getElementById('crmForm').reset();
+            document.getElementById('interestValue').textContent = '5';
+            document.querySelectorAll('#exportMarkets .tag').forEach(tag => tag.remove());
+        }
+
+        function loadCRMRecords() {
+            const saved = localStorage.getItem('crmRecords');
+            crmRecords = saved ? JSON.parse(saved) : [];
+        }
+
+        function exportCSV() {
+            if (crmRecords.length === 0) {
+                showToast('No records to export', 'error');
+                return;
+            }
+
+            const headers = ['Company Name', 'Contact Person', 'Phone', 'Email', 'Industry', 'Export Markets', 'Interest Level', 'Follow-up Date', 'Notes', 'Created At'];
+            const csvContent = [
+                headers.join(','),
+                ...crmRecords.map(record => [
+                    record.companyName,
+                    record.contactPerson,
+                    record.phone,
+                    record.email,
+                    record.industry,
+                    record.exportMarkets.join('; '),
+                    record.interestLevel,
+                    record.followupDate,
+                    `"${record.notes.replace(/"/g, '""')}"`,
+                    record.createdAt
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cb-east-records-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('CSV exported successfully!', 'success');
+        }
+
+        function emailOnePager() {
+            showToast('One-pager email queued for sending', 'success');
+        }
+
+        function renderRecordsList() {
+            const container = document.getElementById('recordsList');
+            const searchTerm = document.getElementById('recordSearch').value.toLowerCase();
+            const sortBy = document.getElementById('recordSort').value;
+            
+            let filteredRecords = crmRecords.filter(record =>
+                record.companyName.toLowerCase().includes(searchTerm) ||
+                record.contactPerson.toLowerCase().includes(searchTerm) ||
+                record.industry.toLowerCase().includes(searchTerm)
+            );
+
+            // Sort records
+            filteredRecords.sort((a, b) => {
+                switch (sortBy) {
+                    case 'interest':
+                        return b.interestLevel - a.interestLevel;
+                    case 'company':
+                        return a.companyName.localeCompare(b.companyName);
+                    case 'date':
+                    default:
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                }
+            });
+
+            if (filteredRecords.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">No records found</div>';
+                return;
+            }
+
+            container.innerHTML = filteredRecords.map(record => `
+                <div class="lead-item">
+                    <div class="lead-info">
+                        <div class="lead-name">${record.companyName}</div>
+                        <div class="lead-details">${record.contactPerson} • ${record.industry}</div>
+                        <div class="lead-details">Interest: ${record.interestLevel}/10</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+                        <div class="lead-score">${record.interestLevel}</div>
+                        <button class="btn btn-small" onclick="editRecord(${record.id})">Edit</button>
+                        <button class="btn btn-secondary btn-small" onclick="deleteRecord(${record.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editRecord(id) {
+            const record = crmRecords.find(r => r.id === id);
+            if (!record) return;
+
+            // Populate form with record data
+            document.getElementById('companyName').value = record.companyName;
+            document.getElementById('contactPerson').value = record.contactPerson;
+            document.getElementById('phone').value = record.phone;
+            document.getElementById('email').value = record.email;
+            document.getElementById('industry').value = record.industry;
+            document.getElementById('interestLevel').value = record.interestLevel;
+            document.getElementById('interestValue').textContent = record.interestLevel;
+            document.getElementById('followupDate').value = record.followupDate;
+            document.getElementById('crmNotes').value = record.notes;
+
+            // Add export market tags
+            record.exportMarkets.forEach(market => addMarketTag(market));
+
+            // Remove the record so it gets updated when saved
+            crmRecords = crmRecords.filter(r => r.id !== id);
+            renderRecordsList();
+            
+            showToast('Record loaded for editing', 'success');
+        }
+
+        function deleteRecord(id) {
+            if (confirm('Delete this record?')) {
+                crmRecords = crmRecords.filter(r => r.id !== id);
+                localStorage.setItem('crmRecords', JSON.stringify(crmRecords));
+                renderRecordsList();
+                showToast('Record deleted', 'success');
+            }
+        }
+
+        // Setup record search and sort
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('recordSearch').addEventListener('input', renderRecordsList);
+            document.getElementById('recordSort').addEventListener('change', renderRecordsList);
+        });
+
+        /* Lead Queue */
+        function renderLeadQueue(leads = null) {
+            const container = document.getElementById('leadQueue');
+            const leadsData = leads || JSON.parse(localStorage.getItem('leads') || '[]');
+            
+            container.innerHTML = leadsData.map(lead => `
+                <div class="lead-item" onclick="selectLead(${lead.id})">
+                    <div class="lead-info">
+                        <div class="lead-name">${lead.name}</div>
+                        <div class="lead-details">${lead.industry} • ${lead.region}</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                        <div class="lead-score">${lead.interest}</div>
+                        <div class="status-pill ${lead.status}">${lead.status}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectLead(id) {
+            const leads = JSON.parse(localStorage.getItem('leads') || '[]');
+            const lead = leads.find(l => l.id === id);
+            if (!lead) return;
+
+            // Pre-fill CRM form
+            document.getElementById('companyName').value = lead.name;
+            document.getElementById('contactPerson').value = lead.contact;
+            document.getElementById('phone').value = lead.phone;
+            document.getElementById('industry').value = lead.industry;
+            addMarketTag(lead.region);
+            document.getElementById('interestLevel').value = lead.interest;
+            document.getElementById('interestValue').textContent = lead.interest;
+
+            // Update dialer
+            document.getElementById('dialerNumber').textContent = lead.phone;
+            currentCall.number = lead.phone;
+
+            showToast(`Lead ${lead.name} selected`, 'success');
+        }
+
+        /* Objections */
+        function openObjectionModal() {
+            document.getElementById('objectionModal').classList.remove('hidden');
+            renderObjectionList();
+        }
+
+        function closeObjectionModal() {
+            document.getElementById('objectionModal').classList.add('hidden');
+        }
+
+        function renderObjectionList() {
+            const objections = [
+                { objection: "We're not ready for international", response: "That's exactly why our free assessment is valuable - we help you determine readiness and create a timeline that works for your business." },
+                { objection: "We don't have budget", response: "Our initial services are funded by the government - there's no cost to explore opportunities. Plus, we'll show you funding options available for qualified exporters." },
+                { objection: "We tried before and failed", response: "That's common - 70% of first attempts fail due to poor market selection. We use data-driven market analysis to avoid those mistakes and build on what you learned." },
+                { objection: "Send me information first", response: "I can send a one-pager, but the real value is in the customized market opportunity report I prepare for each business. It takes 15 minutes and you'll have actionable insights immediately." },
+                { objection: "We're too small", response: "Size isn't the barrier - preparation is. Some of our most successful clients started with under $1M revenue. We scale our support to match your business size and growth stage." },
+                { objection: "The timing isn't right", response: "I understand timing is important. Our free assessment actually helps you determine the optimal timing. Would it help to understand what 'export-ready' looks like for your specific situation?" }
+            ];
+
+            const searchTerm = document.getElementById('objectionSearch').value.toLowerCase();
+            const filtered = objections.filter(obj => 
+                obj.objection.toLowerCase().includes(searchTerm) ||
+                obj.response.toLowerCase().includes(searchTerm)
+            );
+
+            document.getElementById('objectionList').innerHTML = filtered.map(obj => `
+                <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer;" onclick="insertObjectionToNotes('${obj.objection}', '${obj.response}')">
+                    <div style="font-weight: 500; margin-bottom: 4px;">${obj.objection}</div>
+                    <div style="color: var(--text-muted); font-size: 14px;">${obj.response}</div>
+                </div>
+            `).join('');
+        }
+
+        function insertObjectionToNotes(objection, response) {
+            const noteInput = document.getElementById('noteInput');
+            const text = `Objection: "${objection}"\nResponse: "${response}"`;
+            noteInput.value += (noteInput.value ? '\n\n' : '') + text;
+            addTag('Objection Handled');
+            closeObjectionModal();
+            showToast('Objection response inserted into notes', 'success');
+        }
+
+        // Setup objection search
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('objectionSearch').addEventListener('input', renderObjectionList);
+        });
+
+        /* Toast Notifications */
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const messageEl = document.getElementById('toastMessage');
+            
+            messageEl.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        /* Dark Mode */
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.body.setAttribute('data-theme', savedTheme);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.body.setAttribute('data-theme', 'dark');
+            }
+        });
+
+        /* Mobile Responsive */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add mobile menu button to topbar
+            const mobileMenuBtn = document.createElement('button');
+            mobileMenuBtn.className = 'topbar-btn';
+            mobileMenuBtn.style.display = 'none';
+            mobileMenuBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>`;
+            mobileMenuBtn.onclick = () => toggleSidebar('left');
+            
+            const crmToggleBtn = document.createElement('button');
+            crmToggleBtn.className = 'topbar-btn';
+            crmToggleBtn.style.display = 'none';
+            crmToggleBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>`;
+            crmToggleBtn.onclick = () => toggleSidebar('right');
+
+            const topbarActions = document.querySelector('.topbar-actions');
+            topbarActions.insertBefore(crmToggleBtn, topbarActions.firstChild);
+            topbarActions.insertBefore(mobileMenuBtn, topbarActions.firstChild);
+
+            function updateMobileButtons() {
+                const width = window.innerWidth;
+                mobileMenuBtn.style.display = width <= 768 ? 'flex' : 'none';
+                crmToggleBtn.style.display = width <= 1024 ? 'flex' : 'none';
+            }
+
+            window.addEventListener('resize', updateMobileButtons);
+            updateMobileButtons();
+        });
+
+        /* Analytics */
+        function updateAnalytics() {
+            const today = new Date().toDateString();
+            const todayCalls = feedItems.filter(item => 
+                item.tags.includes('Call') && 
+                item.timestamp.toDateString() === today
+            ).length;
+            
+            const todayNotes = feedItems.filter(item => 
+                item.timestamp.toDateString() === today
+            ).length;
+
+            // Update UI with analytics (could add a analytics card if needed)
+            console.log(`Today's Stats: ${todayCalls} calls, ${todayNotes} total notes`);
+        }
+
+        /* Region Focus */
+        function getRegionSuggestions() {
+            return ['Saudi Arabia', 'Qatar', 'UAE/Dubai', 'Indonesia', 'Malaysia', 'Kazakhstan', 'Uzbekistan', 'Guyana'];
+        }
+
+        // Enhanced market input with suggestions
+        document.addEventListener('DOMContentLoaded', function() {
+            const marketInput = document.getElementById('marketInput');
+            const suggestions = getRegionSuggestions();
+            
+            // Create datalist for suggestions
+            const datalist = document.createElement('datalist');
+            datalist.id = 'regionSuggestions';
+            suggestions.forEach(region => {
+                const option = document.createElement('option');
+                option.value = region;
+                datalist.appendChild(option);
+            });
+            document.body.appendChild(datalist);
+            marketInput.setAttribute('list', 'regionSuggestions');
+        });
+
+        /* Initialize Everything */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup toggle buttons
+            document.getElementById('toggleTLDR').addEventListener('click', toggleTLDR);
+            
+            // Initialize theme
+            const savedTheme = localStorage.getItem('theme') || 
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.body.setAttribute('data-theme', savedTheme);
+            
+            // Load initial data
+            initializeData();
+            loadCRMRecords();
+            renderLeadQueue();
+            renderActivityFeed();
+            renderRecordsList();
+            updateAnalytics();
+            
+            // Show welcome message
+            setTimeout(() => {
+                showToast('Welcome to CB East Call Console! Press ? for shortcuts', 'success');
+            }, 1000);
+        });
+
+        // Utility Functions
+        function formatDateTime(date) {
+            return new Intl.DateTimeFormat('en-CA', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(new Date(date));
+        }
+
+        function generateId() {
+            return Date.now() + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Export functions for global access
+        window.toggleSidebar = toggleSidebar;
+        window.dialNumber = dialNumber;
+        window.makeCall = makeCall;
+        window.endCall = endCall;
+        window.toggleMute = toggleMute;
+        window.toggleHold = toggleHold;
+        window.closeDialer = closeDialer;
+        window.addTag = addTag;
+        window.removeTag = removeTag;
+        window.addNote = addNote;
+        window.editNote = editNote;
+        window.deleteNote = deleteNote;
+        window.toggleReaction = toggleReaction;
+        window.saveCRMRecord = saveCRMRecord;
+        window.clearForm = clearForm;
+        window.exportCSV = exportCSV;
+        window.emailOnePager = emailOnePager;
+        window.editRecord = editRecord;
+        window.deleteRecord = deleteRecord;
+        window.selectLead = selectLead;
+        window.insertToNotes = insertToNotes;
+        window.toggleCollapse = toggleCollapse;
+        window.openObjectionModal = openObjectionModal;
+        window.closeObjectionModal = closeObjectionModal;
+        window.insertObjectionToNotes = insertObjectionToNotes;
+    </script>
+</body>
+</html>
